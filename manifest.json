@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "AWS Countdown Timer",
+  "version": "1.0.0",
+  "description": "AWS-themed countdown timer overlay for task completion tracking",
+  
+  "permissions": [
+    "activeTab"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/task/*"
+      ],
+      "js": ["content-script.js"],
+      "css": ["styles.css"],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "author": "AWS Countdown Extension",
+  "homepage_url": "https://github.com/aws-countdown-extension"
+}

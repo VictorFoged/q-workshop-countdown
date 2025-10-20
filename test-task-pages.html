@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Countdown Extension Test - Task Pages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .nav-links {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 8px 15px;
+            background: #007cba;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+        .nav-links a:hover {
+            background: #005a87;
+        }
+        .current-page {
+            background: #28a745 !important;
+        }
+        .reset-test {
+            background: #dc3545 !important;
+        }
+        .test-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .test-scenario {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #007cba;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>AWS Countdown Extension Test</h1>
+    
+    <div class="nav-links">
+        <strong>Test Navigation:</strong><br>
+        <a href="#" onclick="simulateNavigation('/task/1')" id="task1-link">Task 1 (Countdown Starts)</a>
+        <a href="#" onclick="simulateNavigation('/task/2')" id="task2-link">Task 2 (Timer Continues)</a>
+        <a href="#" onclick="simulateNavigation('/task/3')" id="task3-link">Task 3 (Timer Continues)</a>
+        <a href="#" onclick="simulateNavigation('/other-page')" id="other-link">Other Page (No Extension)</a>
+        <a href="#" onclick="simulateNavigation('/home')" id="home-link" class="reset-test">Home Page (Test Reset)</a>
+    </div>
+
+    <div id="current-url-display">
+        <strong>Current URL Path:</strong> <span id="current-path">/task/1</span>
+    </div>
+
+    <div class="test-scenario">
+        <h3>🔄 Timer Reset Test Scenario:</h3>
+        <ol>
+            <li><strong>Start on Task 1:</strong> Timer should begin countdown</li>
+            <li><strong>Navigate to Task 2:</strong> Timer continues countdown (same timer across all tasks)</li>
+            <li><strong>Navigate to Task 3:</strong> Timer continues countdown</li>
+            <li><strong>Navigate back to Task 1:</strong> Timer continues from where it left off</li>
+            <li><strong>Navigate to Home Page:</strong> Extension disappears</li>
+            <li><strong>Navigate back to Task 1:</strong> ⚡ Timer should RESET to 10:00</li>
+        </ol>
+        <p><strong>Key Point:</strong> Timer tracks total time across ALL tasks and only resets when coming to /task/1 from a non-task page!</p>
+    </div>
+
+    <div class="test-form">
+        <h3>Test Form Elements</h3>
+        <p>These elements should be disabled when the countdown expires on /task/1:</p>
+        
+        <div class="form-group">
+            <label for="test-input">Text Input:</label>
+            <input type="text" id="test-input" placeholder="Enter some text...">
+        </div>
+        
+        <div class="form-group">
+            <label for="test-textarea">Textarea:</label>
+            <textarea id="test-textarea" rows="3" placeholder="Enter a longer message..."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="test-select">Select:</label>
+            <select id="test-select">
+                <option value="">Choose an option...</option>
+                <option value="option1">Option 1</option>
+                <option value="option2">Option 2</option>
+            </select>
+        </div>
+        
+        <button type="button" onclick="alert('Button clicked!')">Test Button</button>
+        <button type="submit">Submit Button</button>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <h3>Expected Behavior:</h3>
+        <ul>
+            <li><strong>/task/1:</strong> Extension shows with countdown timer running (10 minutes)</li>
+            <li><strong>/task/2, /task/3:</strong> Extension shows with same countdown timer continuing (if timer was started on /task/1)</li>
+            <li><strong>/task/2, /task/3 (no existing timer):</strong> Extension shows "Navigate to /task/1 to start countdown"</li>
+            <li><strong>Other pages:</strong> Extension should not appear</li>
+            <li><strong>Timer Persistence:</strong> Timer continues when navigating between ALL task pages</li>
+            <li><strong>Timer Reset:</strong> Timer resets to 10:00 when navigating to /task/1 from non-task pages</li>
+            <li><strong>When countdown expires:</strong> Form elements above should be disabled on ALL task pages</li>
+        </ul>
+    </div>
+
+    <script>
+        // Simulate navigation for testing
+        function simulateNavigation(path) {
+            // Update the URL path simulation
+            document.getElementById('current-path').textContent = path;
+            
+            // Update current page indicator
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('current-page');
+            });
+            
+            if (path === '/task/1') {
+                document.getElementById('task1-link').classList.add('current-page');
+            } else if (path === '/task/2') {
+                document.getElementById('task2-link').classList.add('current-page');
+            } else if (path === '/task/3') {
+                document.getElementById('task3-link').classList.add('current-page');
+            } else if (path === '/other-page') {
+                document.getElementById('other-link').classList.add('current-page');
+            } else if (path === '/home') {
+                document.getElementById('home-link').classList.add('current-page');
+            }
+            
+            // Simulate URL change by updating window.location properties
+            // This is a simulation - in real usage, the extension would detect actual URL changes
+            const originalPathname = window.location.pathname;
+            const originalHref = window.location.href;
+            
+            // Create a mock location object for testing
+            Object.defineProperty(window.location, 'pathname', {
+                writable: true,
+                value: path
+            });
+            
+            Object.defineProperty(window.location, 'href', {
+                writable: true,
+                value: window.location.origin + path
+            });
+            
+            // Trigger URL change detection if the extension is loaded
+            if (window.awsCountdownInitializer && 
+                window.awsCountdownInitializer.getTimerController() && 
+                window.awsCountdownInitializer.getTimerController().getUrlDetector()) {
+                
+                const urlDetector = window.awsCountdownInitializer.getTimerController().getUrlDetector();
+                urlDetector.handleUrlChange();
+            }
+            
+            console.log(`Simulated navigation to: ${path}`);
+        }
+        
+        // Set initial state
+        simulateNavigation('/task/1');
+        
+        // Add some debug information
+        console.log('Test page loaded. Extension should initialize automatically.');
+        console.log('Use the navigation links above to test different URL patterns.');
+        console.log('Pay attention to timer reset behavior when navigating from non-task pages!');
+    </script>
+</body>
+</html>

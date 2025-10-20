@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Timer Fixes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #007cba;
+        }
+        .nav-buttons {
+            margin: 10px 0;
+        }
+        .nav-buttons button {
+            margin: 5px;
+            padding: 10px 15px;
+            background: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .nav-buttons button:hover {
+            background: #005a87;
+        }
+        .status {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+        .test-form {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .test-form input, .test-form textarea, .test-form button {
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Timer Fixes Test</h1>
+    
+    <div class="test-section">
+        <h3>🎯 Testing Two Fixes</h3>
+        <ol>
+            <li><strong>Text Visibility Fix:</strong> When timer expires, the "Time Expired" message should be visible (white text on red background)</li>
+            <li><strong>Timer Reset Fix:</strong> When navigating to /task/1 from a non-task page, timer should reset to 10:00</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>📍 Navigation Test</h3>
+        <div class="status" id="current-url">
+            <strong>Current Path:</strong> <span id="url-display">/task/1</span>
+        </div>
+        
+        <div class="nav-buttons">
+            <button onclick="navigateTo('/task/1')">Go to Task 1</button>
+            <button onclick="navigateTo('/task/2')">Go to Task 2</button>
+            <button onclick="navigateTo('/home')">Go to Home (Non-task)</button>
+            <button onclick="navigateTo('/other-page')">Go to Other Page</button>
+        </div>
+        
+        <div class="nav-buttons">
+            <button onclick="forceExpireTimer()" style="background: #dc3545;">Force Timer to Expire (Test Fix #1)</button>
+            <button onclick="clearTimer()" style="background: #6c757d;">Clear Timer State</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>⏱️ Timer Status</h3>
+        <div class="status" id="timer-status">
+            <div><strong>Remaining Time:</strong> <span id="remaining-time">--:--</span></div>
+            <div><strong>Is Active:</strong> <span id="is-active">--</span></div>
+            <div><strong>Is Expired:</strong> <span id="is-expired">--</span></div>
+        </div>
+        
+        <button onclick="checkTimerStatus()">Refresh Timer Status</button>
+    </div>
+
+    <div class="test-section">
+        <h3>🔧 Test Form Elements</h3>
+        <p>These should be disabled when timer expires:</p>
+        <div class="test-form">
+            <input type="text" placeholder="Test input" id="test-input">
+            <textarea placeholder="Test textarea" id="test-textarea" rows="2"></textarea>
+            <button type="button" id="test-button">Test Button</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>✅ Test Instructions</h3>
+        <div class="status">
+            <h4>Test Fix #1 (Text Visibility):</h4>
+            <ol>
+                <li>Wait for timer to expire naturally OR click "Force Timer to Expire"</li>
+                <li>Check that the "Time Expired - Form Disabled" message is clearly visible</li>
+                <li>The text should be white on a red background</li>
+            </ol>
+        </div>
+        
+        <div class="status">
+            <h4>Test Fix #2 (Timer Reset):</h4>
+            <ol>
+                <li>Start on /task/1 (timer should be running)</li>
+                <li>Navigate to /home or /other-page (timer should disappear and be cleared)</li>
+                <li>Navigate back to /task/1</li>
+                <li>Timer should reset to 10:00 and start fresh</li>
+            </ol>
+            <p><strong>New Behavior:</strong> Timer is cleared immediately when leaving any task page!</p>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(path) {
+            // Update URL display
+            document.getElementById('url-display').textContent = path;
+            
+            // Simulate URL change
+            Object.defineProperty(window.location, 'pathname', {
+                writable: true,
+                value: path
+            });
+            
+            Object.defineProperty(window.location, 'href', {
+                writable: true,
+                value: window.location.origin + path
+            });
+            
+            // Trigger extension URL change detection
+            if (window.awsCountdownInitializer && 
+                window.awsCountdownInitializer.getTimerController() && 
+                window.awsCountdownInitializer.getTimerController().getUrlDetector()) {
+                
+                const urlDetector = window.awsCountdownInitializer.getTimerController().getUrlDetector();
+                urlDetector.handleUrlChange();
+            }
+            
+            // Check timer status after navigation
+            setTimeout(() => {
+                checkTimerStatus();
+            }, 100);
+            
+            console.log(`Navigated to: ${path}`);
+        }
+
+        function checkTimerStatus() {
+            if (!window.awsCountdownInitializer || !window.awsCountdownInitializer.getTimerController()) {
+                document.getElementById('remaining-time').textContent = 'Extension not loaded';
+                return;
+            }
+            
+            const controller = window.awsCountdownInitializer.getTimerController();
+            const timer = controller.getTimer();
+            const state = timer.getState();
+            
+            document.getElementById('remaining-time').textContent = formatTime(state.remainingTime);
+            document.getElementById('is-active').textContent = state.isActive ? 'Yes' : 'No';
+            document.getElementById('is-expired').textContent = state.isExpired ? 'Yes' : 'No';
+        }
+
+        function formatTime(milliseconds) {
+            const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function forceExpireTimer() {
+            if (!window.awsCountdownInitializer || !window.awsCountdownInitializer.getTimerController()) {
+                alert('Extension not loaded');
+                return;
+            }
+            
+            const controller = window.awsCountdownInitializer.getTimerController();
+            const timer = controller.getTimer();
+            
+            // Force expire the timer by setting remaining time to 0
+            timer.state.remainingTime = 0;
+            timer.state.isExpired = true;
+            timer.state.isActive = false;
+            timer.saveStateToStorage();
+            timer.expire();
+            
+            console.log('Timer forced to expire for testing');
+            checkTimerStatus();
+        }
+
+        function clearTimer() {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem('aws-countdown-timer-state');
+                console.log('Timer state cleared');
+                
+                // Refresh the page to restart
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
+            }
+        }
+
+        // Initialize
+        setTimeout(() => {
+            navigateTo('/task/1');
+        }, 1000);
+
+        // Periodic status updates
+        setInterval(checkTimerStatus, 2000);
+    </script>
+</body>
+</html>
